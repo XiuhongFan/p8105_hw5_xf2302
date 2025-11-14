@@ -143,3 +143,82 @@ sim_results |>
 ```
 
 The overall average of μ̂ closely matches the true μ, showing that the estimator is unbiased. However, when considering only samples in which the null was rejected, the average μ̂ is higher than the true μ for small effect sizes. This occurs because significant results are more likely when μ̂ is an unusually large positive estimate, creating selection bias.
+
+# Problem 3
+# Load and Clean Raw Data
+```{r}
+homicide_df =
+  read_csv("data/homicide-data.csv") |> 
+  clean_names() |> 
+  mutate(
+    city_state = str_c(city, ", ", state),
+    unsolved = if_else(
+      disposition %in% c("Closed without arrest", "Open/No arrest"),
+      1, 0
+    )
+  )
+```
+The raw dataset contains 52,179 homicide cases from 50 large U.S. cities, with each row representing a single victim. The variables include information on the city and state, victim demographics, geographic location, the date of the homicide, and the case disposition. This structure allows us to examine how homicide characteristics and outcomes vary across cities.
+
+# Summarize Homicides per City
+```{r}
+city_summary =
+  homicide_df |> 
+  group_by(city_state) |> 
+  summarize(
+    total = n(),
+    unsolved = sum(unsolved),
+    .groups = "drop"
+  )
+```
+# Single-City Example: Baltimore, MD
+```{r}
+baltimore =
+  city_summary |> 
+  filter(city_state == "Baltimore, MD")
+
+baltimore_test = prop.test(baltimore$unsolved, baltimore$total)
+
+baltimore_tidy = broom::tidy(baltimore_test)
+baltimore_tidy
+```
+# Run prop.test for All Cities
+```{r}
+results_all_cities =
+  city_summary |> 
+  mutate(
+    test_result = map2(unsolved, total, prop.test),
+    tidy_output = map(test_result, broom::tidy)
+  ) |> 
+  unnest(tidy_output)
+```
+# Plot: Proportion of Unsolved Homicides by City (With CI)
+```{r, fig.width=11, fig.height=15}
+results_all_cities |> 
+  mutate(
+    city_state = fct_reorder(city_state, estimate)
+  ) |> 
+  ggplot(aes(x = estimate, y = city_state)) +
+  
+  geom_errorbarh(aes(xmin = conf.low, xmax = conf.high),
+                 height = 0.25, color = "black") +
+  
+  geom_point(color = "black", size = 3) +
+  
+  labs(
+    title = "Estimated Proportion of Unsolved Homicides by City",
+    x = "Estimated Proportion Unsolved",
+    y = "City"
+  ) +
+  
+theme_minimal(base_size = 12) +
+  theme(
+    axis.text.y = element_text(size = 6, colour = "black"),
+    axis.text.x = element_text(size = 10, colour = "black"),
+    plot.title  = element_text(size = 20, face = "bold", colour = "black"),
+    legend.position = "none"
+  )
+
+```
+
+This plot shows the estimated proportion of unsolved homicides for major U.S. cities, with each point representing an estimate and horizontal error bars indicating the confidence intervals. Cities are ordered from lowest to highest unsolved rate, making cross-city comparisons straightforward. The visualization highlights substantial variation in homicide clearance rates, with a clear gap between the lowest and highest cities.
