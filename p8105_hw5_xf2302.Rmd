@@ -142,7 +142,7 @@ sim_results |>
   )
 ```
 
-The overall average of μ̂ closely matches the true μ, showing that the estimator is unbiased. However, when considering only samples in which the null was rejected, the average μ̂ is higher than the true μ for small effect sizes. This occurs because significant results are more likely when μ̂ is an unusually large positive estimate, creating selection bias.
+The sample average of μ̂ from only the tests in which the null is rejected does not match the true μ when the effect size is small. Although μ̂ is unbiased overall, restricting attention to significant results introduces an upward bias, because rejection is more likely when μ̂ happens to be unusually large, producing selection bias.
 
 # Problem 3
 # Load and Clean Raw Data
@@ -158,7 +158,7 @@ homicide_df =
     )
   )
 ```
-The raw dataset contains 52,179 homicide cases from 50 large U.S. cities, with each row representing a single victim. The variables include information on the city and state, victim demographics, geographic location, the date of the homicide, and the case disposition. This structure allows us to examine how homicide characteristics and outcomes vary across cities.
+The raw dataset contains 52,179 homicide cases from 50 large U.S. cities, with each row representing a single victim. The variables include city and state identifiers, victim demographics (age, sex, race), geographic coordinates, the date of the homicide, and the case disposition. The disposition variable indicates whether the case was “Closed by arrest” (solved), “Closed without arrest,” or “Open/No arrest” (both unsolved). This structure allows for city-level comparisons of homicide characteristics and case outcomes.
 
 # Summarize Homicides per City
 ```{r}
